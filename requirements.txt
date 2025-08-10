@@ -1,0 +1,15 @@
+asyncpg
+boto3
+boto3-stubs
+fastapi[standard]
+joserfc
+passlib
+types-passlib
+argon2_cffi
+pytest
+pytest-asyncio
+pydantic
+pydantic-settings
+sqlalchemy[asyncio]
+
+python-multipart
