@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
 from fastapi import Depends
@@ -24,7 +24,7 @@ class Token(BaseModel):
 
 def create_access_token(username: str) -> Token:
     header = {"alg": jwt_settings.algorithm}
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
     payload = {
         "sub": username,
         "iat": now,
