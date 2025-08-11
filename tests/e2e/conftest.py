@@ -10,7 +10,7 @@ from app.models import Base, User
 from app.dependencies import get_db_session, get_file_service
 from app.jwt import get_username_from_jwt
 
-TEST_USERNAME = "test_user"
+TEST_USERS = "alice", "bob"
 
 
 async def create_user(session: AsyncSession, username: str) -> None:
@@ -25,7 +25,8 @@ async def create_inmemory_session() -> async_sessionmaker[AsyncSession]:
     Session = async_sessionmaker(engine)
 
     async with Session() as session:
-        await create_user(session, TEST_USERNAME)
+        for username in TEST_USERS:
+            await create_user(session, username)
 
     return Session
 
@@ -36,5 +37,10 @@ def client() -> TestClient:
     file_service = FakeFileService()
     app.dependency_overrides[get_db_session] = lambda: Session
     app.dependency_overrides[get_file_service] = lambda: file_service
-    app.dependency_overrides[get_username_from_jwt] = lambda: TEST_USERNAME
+    app.dependency_overrides[get_username_from_jwt] = lambda: TEST_USERS[0]
     return TestClient(app)
+
+
+@pytest.fixture()
+def Session(client: TestClient) -> async_sessionmaker[AsyncSession]:
+    return client.app.dependency_overrides[get_db_session]()  # type: ignore
