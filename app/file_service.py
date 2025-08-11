@@ -3,6 +3,7 @@ import asyncio
 from functools import partial
 from pathlib import Path
 from shutil import copyfileobj
+from tempfile import TemporaryFile
 from typing import BinaryIO
 from uuid import UUID
 
@@ -21,6 +22,24 @@ class FileService(ABC):
     @abstractmethod
     async def get(self, file_id: UUID) -> BinaryIO:
         """retrive a saved file"""
+
+
+class FakeFileService(FileService):
+    def __init__(self):
+        self.files = {}
+
+    async def save(self, file_id: UUID, file: BinaryIO) -> None:
+        temp_file = TemporaryFile()
+        self.files[file_id] = temp_file
+        copyfileobj(file, temp_file)
+
+    async def delete(self, file_id: UUID) -> None:
+        del self.files[file_id]
+
+    async def get(self, file_id: UUID) -> BinaryIO:
+        file = self.files[file_id]
+        file.seek(0)
+        return file
 
 
 class LocalFileService(FileService):

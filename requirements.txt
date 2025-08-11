@@ -11,5 +11,6 @@ pytest-asyncio
 pydantic
 pydantic-settings
 sqlalchemy[asyncio]
+aiosqlite
 
 python-multipart
