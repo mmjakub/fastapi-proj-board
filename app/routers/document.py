@@ -29,11 +29,14 @@ async def list_all_project_documents(
     async with DBSession() as session, session.begin():
         user = (await session.scalars(select(User).where(User.username == username))).one()
         project = await session.scalar(select(Project).where(Project.id == project_id))
+
         if project is None:
             raise HTTPException(status_code=404)
+
         await project.awaitable_attrs.collaborators
         if user not in project.collaborators:
             raise HTTPException(status_code=403)
+
         await project.awaitable_attrs.documents
         return [DocumentResponse.from_sa_orm(doc) for doc in project.documents]
 
@@ -49,17 +52,22 @@ async def upload_file_to_project_documents(
     async with DBSession() as session, session.begin():
         user = (await session.scalars(select(User).where(User.username == username))).one()
         project = await session.scalar(select(Project).where(Project.id == project_id))
+
         if project is None:
             raise HTTPException(status_code=404)
+
         await project.awaitable_attrs.collaborators
         if user not in project.collaborators:
             raise HTTPException(status_code=403)
+
         document_id = uuid4()
         document = Document(id=document_id, filename=file.filename)
         document.project = project
+
         session.add(document)
         await file_service.save(document_id, file.file)
         await session.flush()
+
         return DocumentResponse.from_sa_orm(document)
 
 
@@ -84,6 +92,7 @@ async def download_document(
 
         file = await file_service.get(document_id)
         headers = {"Content-Disposition": f"attachment; filename={document.filename}"}
+
         return StreamingResponse(file, headers=headers, media_type="application/octet-stream")
 
 
@@ -108,9 +117,11 @@ async def update_document(
             raise HTTPException(status_code=403)
 
         await file_service.save(document_id, file.file)
+
         if file.filename:
             document.filename = file.filename
             await session.merge(document)
+
         return DocumentResponse.from_sa_orm(document)
 
 

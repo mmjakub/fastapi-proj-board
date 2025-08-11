@@ -103,11 +103,14 @@ async def get_project_info_by_id(project_id: int, username: JwtUsernameDep, DBSe
     async with DBSession() as session, session.begin():
         user = (await session.scalars(select(User).where(User.username == username))).one()
         project = await session.scalar(select(Project).where(Project.id == project_id))
+
         if project is None:
             raise HTTPException(status_code=404)
+
         await project.awaitable_attrs.collaborators
         if user not in project.collaborators:
             raise HTTPException(status_code=403)
+
         return ProjectInfo.from_sa_orm(project)
 
 
@@ -121,14 +124,18 @@ async def update_project_info_by_id(
     async with DBSession() as session, session.begin():
         user = (await session.scalars(select(User).where(User.username == username))).one()
         project = await session.scalar(select(Project).where(Project.id == project_id))
+
         if project is None:
             raise HTTPException(status_code=404)
+
         await project.awaitable_attrs.collaborators
         if user not in project.collaborators:
             raise HTTPException(status_code=403)
+
         project.name = project_info.name
         project.description = project_info.description
         await session.merge(project)
+
         return ProjectInfo.from_sa_orm(project)
 
 
@@ -139,16 +146,21 @@ async def invite_another_user_to_the_project_by_username(
     async with DBSession() as session, session.begin():
         inviting_user = (await session.scalars(select(User).where(User.username == username))).one()
         invited_user = await session.scalar(select(User).where(User.username == user))
+
         if invited_user is None:
             raise HTTPException(status_code=400, detail=f"User <{user}> does not exist.")
+
         project = await session.scalar(select(Project).where(Project.id == project_id))
         if project is None:
             raise HTTPException(status_code=404)
+
         await project.awaitable_attrs.owner
         if inviting_user is not project.owner:
             raise HTTPException(status_code=403, detail="You must be project owner to invite others")
+
         await project.awaitable_attrs.collaborators
         if invited_user in project.collaborators:
             raise HTTPException(status_code=400, detail=f"User <{user}> already works on this project.")
+
         project.collaborators.append(invited_user)
         await session.merge(project)
