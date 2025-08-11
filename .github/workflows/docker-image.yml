@@ -1,0 +1,22 @@
+name: Push Docker Image to ECR
+
+on:
+  release:
+      types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile --tag fastapi-proj-board
+    - name: Push to ECR
+      id: ecr
+      uses: jwalton/gh-ecr-push@v2
+      with:
+        access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        region: eu-west-1
+        local-image: fastapi-proj-board
+        image: fastapi-proj-board:dev-${{ github.sha }}
