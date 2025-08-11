@@ -6,6 +6,7 @@ Simple project management service implemented for learning purposes
 * Connects to local PostgreSQL and S3
 * There is hope: there is `FileService` port which has local files and S3 adapters
 * Implemented pytest fixtures to use fastapi.TestClient and dependency_overrides with fakes(inmemory sqlite and tempfiles)
+* Created basic CI Action that runs pytest
 
 # In progress
 * writing e2e tests for all use cases
