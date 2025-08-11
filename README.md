@@ -5,7 +5,11 @@ Simple project management service implemented for learning purposes
 * First iteration yielded a CRUD(e) prototype mainly architected as **Big Ball of Mud**
 * Connects to local PostgreSQL and S3
 * There is hope: there is `FileService` port which has local files and S3 adapters
-* Unit testing is practically unfeasible, only e2e api test make sense here, and they could become integration tests in the long term
+* Implemented pytest fixtures to use fastapi.TestClient and dependency_overrides with fakes(inmemory sqlite and tempfiles)
+
+# In progress
+* writing e2e tests for all use cases
+* learning about architecture and patterns from [Cosmic Python](https://www.cosmicpython.com/book/preface.html)
 
 # next steps
 * consider ports & adapters architecure and reimplement using TDD and maybe some DDD?
