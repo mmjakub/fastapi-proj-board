@@ -2,20 +2,25 @@
 Simple project management service implemented for learning purposes
 
 # Current state
-* First iteration yielded a CRUD(e) prototype mainly architected as **Big Ball of Mud**
-* Connects to local PostgreSQL and S3
-* There is hope: there is `FileService` port which has local files and S3 adapters
-* Implemented pytest fixtures to use fastapi.TestClient and dependency_overrides with fakes(inmemory sqlite and tempfiles)
+* First iteration yielded a working prototype that seems to smell like **Big Ball of Mud**
+* There is some hope: there is `FileService` abstraction (port) which has three implementations (adapters):
+   * Local Files
+   * Fake using `tempfiles`
+   * S3 using `boto3`
+* Verified funcionality by running manual tests on local deployment connecting to local PostgreSQL and S3
+* Implemented pytest fixtures to use `fastapi.TestClient` and `FastAPI.dependency_overrides` with fakes(inmemory sqlite and tempfiles)
+* Some business use cases are covered by e2e api tests using fakes
 * Created basic CI Action that runs pytest
-* most use cases are covered by e2e api tests
+* Created Action to build and push docker image to AWS ECR when creating github release
 
 # In progress
 * considering domain modeling and testing strategies
 * learning about architecture and patterns from [Cosmic Python](https://www.cosmicpython.com/book/preface.html)
+* learning and experimenting with AWS - ECR, ECS, S3, RDS
 
 # Next steps
 * consider ports & adapters architecure and reimplement using TDD and maybe some DDD?
-* Unit test usecases using fakes
+* create unit tests for use cases (application layer) using fakes
 * expand on domain - document versioning, granular permissions for project collaborators, project tasks, notifications for project members, etc.
 * consume some outside rest service -> maybe document summary via LLM or searching with RAG?
 * explore containerization and deployment to ECS
