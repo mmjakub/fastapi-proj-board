@@ -12,6 +12,7 @@ Simple project management service implemented for learning purposes
 * Some business use cases are covered by e2e api tests using fakes
 * Created basic CI Action that runs pytest
 * Created Action to build and push docker image to AWS ECR when creating github release
+* App is deployed to ECS and can be tested [here](https://proj-board-1650300757.eu-west-1.elb.amazonaws.com/docs) (used self-signed ssl cert)
 
 # In progress
 * considering domain modeling and testing strategies
@@ -23,5 +24,4 @@ Simple project management service implemented for learning purposes
 * create unit tests for use cases (application layer) using fakes
 * expand on domain - document versioning, granular permissions for project collaborators, project tasks, notifications for project members, etc.
 * consume some outside rest service -> maybe document summary via LLM or searching with RAG?
-* explore containerization and deployment to ECS
 * CD pipeline with ECR
