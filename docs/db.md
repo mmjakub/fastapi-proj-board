@@ -20,9 +20,9 @@ erDiagram
   }
   project ||--o{ document : contains
   document {
-    UUID id PK
+    int id PK
     int project_id FK
-    string filename
+    string upload_filename
   }
   
 ```
