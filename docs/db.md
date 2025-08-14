@@ -1,20 +1,20 @@
 ```mermaid
 erDiagram
   user ||--o{ project: owns
-  user ||--|{ user_project: collaborates
+  user ||--|{ collaborator: is
   user {
     int id PK
     string username
     string password
   }
-  project ||--|{ user_project: collaborates
+  project ||--|{ collaborator: has
   project {
     int id PK
     int owner_id FK
     string name
     string description
   }
-  user_project{
+  collaborator {
     int user_id PK, FK
     int project_id PK, FK
   }
