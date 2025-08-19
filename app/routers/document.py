@@ -32,16 +32,15 @@ async def upload_file_to_project_documents(
     DBSession: DBSessionDep,
     file_service: FileServiceDep,
 ) -> DocumentResponse:
-    async with DBSession() as session, session.begin():
-        document = await ts.upload_document_to_proj(
-            project_id,
-            username,
-            DBSession,
-            file.file,
-            file.filename or "",
-            file_service,
-        )
-        return DocumentResponse(**document)
+    document = await ts.upload_document_to_proj(
+        project_id,
+        username,
+        DBSession,
+        file.file,
+        file.filename or "",
+        file_service,
+    )
+    return DocumentResponse(**document)
 
 
 @router.get("/documents/{document_id}")
@@ -82,5 +81,4 @@ async def delete_document(
     DBSession: DBSessionDep,
     file_service: FileServiceDep,
 ) -> None:
-    async with DBSession() as session, session.begin():
-        await ts.delete_document(document_id, username, DBSession, file_service)
+    await ts.delete_document(document_id, username, DBSession, file_service)

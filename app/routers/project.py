@@ -54,8 +54,7 @@ async def list_projects(
 async def delete_project_by_id(
     project_id: int, username: JwtUsernameDep, DBSession: DBSessionDep, file_service: FileServiceDep
 ) -> None:
-    async with DBSession() as session, session.begin():
-        await ts.delete_project(project_id, username, DBSession, file_service)
+    await ts.delete_project(project_id, username, DBSession, file_service)
 
 
 @router.get("/{project_id}/info", response_model=ProjectInfo)
