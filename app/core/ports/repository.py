@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+from typing import BinaryIO
+
 from ..models import Document, Project, User
 
 
@@ -50,3 +52,17 @@ class UserRepository(ABC):
     @abstractmethod
     async def create(self, username: str, password) -> User:
         "create new user with unique username"
+
+
+class FileRepository(ABC):
+    @abstractmethod
+    async def save(self, file_id: int, file: BinaryIO) -> None:
+        """save a file"""
+
+    @abstractmethod
+    async def delete(self, file_id: int) -> None:
+        """delete a file"""
+
+    @abstractmethod
+    async def get(self, file_id: int) -> BinaryIO:
+        """retrive a saved file"""

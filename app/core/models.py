@@ -20,6 +20,6 @@ class Project:
     id: int | None
     name: str
     description: str
-    owner: str
-    collaborators: set[str]
+    owner_username: str
+    collaborator_usernames: set[str]
     documents: list[Document]
