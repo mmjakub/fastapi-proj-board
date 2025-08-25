@@ -1,9 +1,9 @@
 from enum import Enum
-from typing import Any, TypeVar
+from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel, Field
 
-T = TypeVar("T")
+ItemT = TypeVar("ItemT")
 
 
 class PageInfo(BaseModel):
@@ -13,8 +13,8 @@ class PageInfo(BaseModel):
     total_elements: int = Field(examples=[1], description="How many elements there are in the whole dataset")
 
 
-class PagedList[T](BaseModel):
-    items: list[T]
+class PagedList(BaseModel, Generic[ItemT]):
+    items: list[ItemT]
     page: PageInfo
 
 
