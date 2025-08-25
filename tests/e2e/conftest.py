@@ -9,14 +9,10 @@ from app.main import app
 from app.models import Base, User
 from app.dependencies import get_db_session, get_file_service
 from app.jwt import get_username_from_jwt
-from app.routers.auth import pwd_context
+from app.transaction_script import pwd_context
 
 TEST_USERS = "alice", "bob"
-
-
-async def create_user(session: AsyncSession, username: str) -> None:
-    async with session.begin():
-        session.add(User(username=username, password=pwd_context.hash(username)))
+TEST_PWD = tuple(pwd_context.hash(u) for u in TEST_USERS)
 
 
 async def create_inmemory_session() -> async_sessionmaker[AsyncSession]:
@@ -25,9 +21,9 @@ async def create_inmemory_session() -> async_sessionmaker[AsyncSession]:
         await conn.run_sync(Base.metadata.create_all)
     Session = async_sessionmaker(engine)
 
-    async with Session() as session:
-        for username in TEST_USERS:
-            await create_user(session, username)
+    async with Session() as session, session.begin():
+        for username, password in zip(TEST_USERS, TEST_PWD):
+            session.add(User(username=username, password=password))
 
     return Session
 

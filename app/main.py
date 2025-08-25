@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 
 from .config import settings
 from .models import Base
-from .errors import OAuthException, UnauthorizedError, UsernameTaken
+from .errors import OAuthException, UnauthorizedError, DomainError, ForbiddenError, ResourceNotFound
 from .file_service import FileService, S3FileService, LocalFileService
 from .routers.auth import router as auth_router
 from .routers.project import router as project_router
@@ -66,11 +66,27 @@ async def unauthorized_handler(request: Request, exc: UnauthorizedError):
     )
 
 
-@app.exception_handler(UsernameTaken)
-async def username_taken_handler(request: Request, exc: UsernameTaken):
+@app.exception_handler(DomainError)
+async def domain_error_handler(request: Request, exc: DomainError):
     return JSONResponse(
         status_code=400,
-        content={"error": "Username is not available"},
+        content={"error": exc.reason},
+    )
+
+
+@app.exception_handler(ForbiddenError)
+async def forbidden_error_handler(request: Request, exc: ForbiddenError):
+    return JSONResponse(
+        status_code=403,
+        content={"error": exc.reason},
+    )
+
+
+@app.exception_handler(ResourceNotFound)
+async def resourec_not_found_handler(request: Request, exc: ResourceNotFound):
+    return JSONResponse(
+        status_code=404,
+        content={"error": exc.reason},
     )
 
 
