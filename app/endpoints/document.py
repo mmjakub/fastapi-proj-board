@@ -2,25 +2,27 @@ from fastapi import APIRouter, UploadFile
 from fastapi.responses import StreamingResponse
 
 from ..jwt import JwtUsernameDep
-from .schema import DocumentResponse, error_responses
+from .dependencies import PagingDep
+from .schema import DocumentResponse, error_responses, PagedList
 
 router = APIRouter(tags=["document"], responses=error_responses)
 
 
 @router.get("/projects/{project_id}/documents", summary="List project documents")
-async def list_all(project_id: int, username: JwtUsernameDep) -> list[DocumentResponse]:
+async def list_all(project_id: int, paging: PagingDep, username: JwtUsernameDep) -> PagedList[DocumentResponse]:
     """
     List documents in a project
       - **project_id**: id of the project, in which to create the document
+
+    Optional query parameters
+      - **page**: int = 0: page number, defaults to first page
+      - **limit**: int = 20: items per page, defaults to 20
 
     Responses:
       - 200: Success
       - 401: Authentication required
       - 403: Not authorized to view documents in this project
       - 422: Invalid input
-
-    TODO:
-      - this probably should include pagination
     """
     raise NotImplementedError
 

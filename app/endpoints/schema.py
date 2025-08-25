@@ -1,7 +1,21 @@
 from enum import Enum
-from typing import Any
+from typing import Any, TypeVar
 
 from pydantic import BaseModel, Field
+
+T = TypeVar("T")
+
+
+class PageInfo(BaseModel):
+    page_index: int = Field(examples=[0], description="0-based page number")
+    page_size: int = Field(examples=[20], description="Max number of elements in a page")
+    total_pages: int = Field(examples=[1], description="How many pages does the whole dataset consist of")
+    total_elements: int = Field(examples=[1], description="How many elements there are in the whole dataset")
+
+
+class PagedList[T](BaseModel):
+    items: list[T]
+    page: PageInfo
 
 
 class DocumentResponse(BaseModel):

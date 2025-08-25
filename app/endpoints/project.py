@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
-from .schema import ProjectInfo, ProjectResponse, error_responses, ErrorResponse
+from .dependencies import PagingDep
+from .schema import ProjectInfo, ProjectResponse, error_responses, ErrorResponse, PagedList
 from ..jwt import JwtUsernameDep
 
 router = APIRouter(prefix="/projects", tags=["project"])
@@ -24,16 +25,18 @@ async def create(payload: ProjectInfo, username: JwtUsernameDep) -> ProjectRespo
 
 
 @router.get("/", summary="List projects", responses={401: {"model": ErrorResponse}})
-async def list_all(username: JwtUsernameDep) -> list[ProjectResponse]:
+async def list_all(paging: PagingDep, username: JwtUsernameDep) -> PagedList[ProjectResponse]:
     """
     Returns a list of projects the current user can access.
+
+    Optional query parameters
+      - **page**: int = 0: page number, defaults to first page
+      - **limit**: int = 20: items per page, defaults to 20
+
 
     Responses:
       - 200: Success
       - 401: Authentication required
-
-    TODO:
-    - This probably should be paginated
     """
     raise NotImplementedError
 
