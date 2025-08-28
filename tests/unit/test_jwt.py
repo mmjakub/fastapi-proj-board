@@ -68,4 +68,4 @@ def test_token_signed_with_different_key_raises_unauthorized_error(username):
     with patch.object(jwt, "jwt_key", joserfc.jwk.OctKey.import_key("foobar")):
         token = jwt.create_access_token(username)
     with pytest.raises(UnauthorizedError):
-        jwt.get_username_from_jwt(token.access_token[:-1])
+        jwt.get_username_from_jwt(token.access_token)
