@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import TypeAlias
 
 
 @dataclass
@@ -8,10 +9,13 @@ class Document:
     upload_filename: str
 
 
+Username: TypeAlias = str
+
+
 @dataclass
 class User:
     id: int | None
-    username: str
+    username: Username
     password: str
 
 
@@ -20,6 +24,6 @@ class Project:
     id: int | None
     name: str
     description: str
-    owner_username: str
-    collaborator_usernames: set[str]
+    owner: Username
+    collaborators: set[Username]
     documents: list[Document]

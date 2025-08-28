@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import BinaryIO
 
-from ..models import Document, Project, User
+from ..models import Document, Project, User, Username
 
 
 class DocumentRepository(ABC):
@@ -10,8 +10,8 @@ class DocumentRepository(ABC):
         """get document by id"""
 
     @abstractmethod
-    async def get_all(self, username: str, project_id: int) -> list[Document]:
-        """get document by id"""
+    async def get_all(self, user: Username, project_id: int) -> list[Document]:
+        """get all documents available for user in a project with given id"""
 
     @abstractmethod
     async def save(self, document: Document) -> Document:
@@ -28,8 +28,8 @@ class ProjectRepository(ABC):
         """get project by id"""
 
     @abstractmethod
-    async def get_all(self, username: str) -> list[Project]:
-        """get project by id"""
+    async def get_all(self, user: Username) -> list[Project]:
+        """get all project available for user"""
 
     @abstractmethod
     async def save(self, project: Project) -> Project:
@@ -42,15 +42,15 @@ class ProjectRepository(ABC):
 
 class UserRepository(ABC):
     @abstractmethod
-    async def get_or_none(self, username: str) -> User | None:
+    async def get_or_none(self, username: Username) -> User | None:
         "get user by username"
 
     @abstractmethod
-    async def exists(self, username: str) -> bool:
+    async def exists(self, username: Username) -> bool:
         "check if user with given username exists"
 
     @abstractmethod
-    async def create(self, username: str, password) -> User:
+    async def create(self, username: Username, password) -> User:
         "create new user with unique username"
 
 
