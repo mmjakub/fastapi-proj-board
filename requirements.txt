@@ -1,1 +1,15 @@
-
+aiosqlite
+asyncpg
+bcrypt
+boto3
+boto3-stubs
+fastapi[standard]
+joserfc
+passlib
+pydantic
+pydantic-settings
+pytest
+pytest-asyncio
+python-multipart
+sqlalchemy[asyncio]
+types-passlib
