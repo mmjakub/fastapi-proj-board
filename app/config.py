@@ -1,4 +1,5 @@
 from enum import Enum
+from functools import cache
 
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -34,8 +35,10 @@ class Settings(BaseSettings):
         extra="ignore",
     )
     jwt: JwtSettings
-    s3: S3Settings
+    s3: S3Settings = S3Settings()
     pg: PgSettings = PgSettings()
 
 
-settings = Settings()  # type: ignore
+@cache
+def get_settings():
+    return Settings()  # type: ignore
