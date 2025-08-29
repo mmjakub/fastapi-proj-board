@@ -166,8 +166,8 @@ async def create_user(
     username: Username, password: str, repository: UserRepository, pw_hasher: PasswordHashGateway
 ) -> User:
     if await repository.exists(username):
-        raise UsernameConflict("Username 'username' is not available")
-    user = await repository.create(username, password=pw_hasher.hash(password))
+        raise UsernameConflict(f"Username '{username}' is not available")
+    user = await repository.create(username, pw_hasher.hash(password))
     return user
 
 
