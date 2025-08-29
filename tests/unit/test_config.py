@@ -8,7 +8,7 @@ from app.config import Settings, JwtAlg
 
 @pytest.fixture()
 def test_value() -> str:
-    return "42"
+    return "test_value"
 
 
 def test_jwt_secret_key_is_mandatory():
@@ -31,6 +31,11 @@ def test_jwt_expiration_time_in_minutes_can_be_set():
 def test_jwt_expiration_time_in_minutes_is_60_by_default():
     settings = Settings()
     assert settings.jwt.expires_minutes == 60
+
+
+def test_jwt_expiration_time_in_minutes_must_be_parsable_as_int():
+    with patch.dict("os.environ", {"JWT_EXPIRES_MINUTES": "not int"}), pytest.raises(ValidationError):
+        Settings()
 
 
 def test_jwt_algorithm_can_be_set():
