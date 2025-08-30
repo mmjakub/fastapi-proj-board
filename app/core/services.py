@@ -1,4 +1,3 @@
-import asyncio
 from typing import BinaryIO
 
 from .errors import CollaboratorConflict, ForbiddenError, ResourceNotFound, UsernameConflict
@@ -74,15 +73,15 @@ async def delete_project(
     user: Username,
     project_id: int,
     project_repo: ProjectRepository,
-    doc_repo: DocumentRepository,
     file_repo: FileRepository,
     tasks: TaskQueueGateway,
 ) -> None:
     project = await _get_project_if_user_is_owner(user, project_id, project_repo, "Only owner can delete projects")
-    await asyncio.gather(
-        *(_delete_document(d, doc_repo, file_repo, tasks) for d in project.documents),
-        project_repo.delete(project),
-    )
+    await project_repo.delete(project)
+    for doc in project.documents:
+        if doc.id is None:
+            raise RuntimeError("Document has no id")
+        tasks.add_task(file_repo.delete, doc.id)
 
 
 async def list_project_documents(user: Username, project_id: int, repository: ProjectRepository) -> list[Document]:
