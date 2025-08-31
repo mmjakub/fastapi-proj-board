@@ -4,7 +4,7 @@ import itertools
 from typing import BinaryIO
 
 from app.core.errors import ResourceNotFound
-from app.core.models import User, Username, Project
+from app.core.models import Document, User, Username, Project
 from app.core.ports.repository import FileRepository, UserRepository, ProjectRepository
 from app.core.ports.gateway import PasswordHashGateway, TaskQueueGateway
 
@@ -27,17 +27,28 @@ class FakeProjectRepository(ProjectRepository):
 
     async def save(self, project: Project) -> Project:
         if project.id is None:
-            if self._next_id is None:
-                raise RuntimeError("cannot assign id - call .setup_id() first")
-            project.id = self._next_id
-            self._next_id = None
+            project.id = self._gen_id()
         self._projects[project.id] = project
         return project
 
     async def delete(self, project: Project) -> None:
         if project.id is None:
-            raise RuntimeError("Project.id is none")
+            raise RuntimeError("Project.id is None")
         del self._projects[project.id]
+
+    async def create_document(self, project_id: int, upload_filename) -> Document:
+        document = Document(self._gen_id(), project_id, upload_filename)
+        self._projects[project_id].documents.append(document)
+        return document
+
+    async def get_by_document_id(self, document_id: int) -> Project:
+        if document_id is None:
+            raise RuntimeError("Document.id is None")
+        for p in self._projects.values():
+            for d in p.documents:
+                if d.id == document_id:
+                    return p
+        raise ResourceNotFound(f"<Document id={document_id}> not found in any project")
 
     def setup_id(self, next_id: int) -> None:
         self._next_id = next_id
@@ -49,6 +60,12 @@ class FakeProjectRepository(ProjectRepository):
 
     def contains(self, project) -> bool:
         return project.id is not None and project.id in self._projects and self._projects[project.id] == project
+
+    def _gen_id(self) -> int:
+        if self._next_id is None:
+            raise RuntimeError("cannot assign id - call .setup_id() first")
+        next_id, self.next_id = self._next_id, None
+        return next_id
 
 
 class FakeFileRepository(FileRepository):
@@ -64,7 +81,7 @@ class FakeFileRepository(FileRepository):
     async def get(self, file_id: int) -> BinaryIO:
         return self.files[file_id]
 
-    def exists(self, file_id: int) -> bool:
+    def contains(self, file_id: int) -> bool:
         return file_id in self.files
 
 

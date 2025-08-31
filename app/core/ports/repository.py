@@ -4,24 +4,6 @@ from typing import BinaryIO
 from ..models import Document, Project, User, Username
 
 
-class DocumentRepository(ABC):
-    @abstractmethod
-    async def get(self, document_id: int) -> Document:
-        """get document by id"""
-
-    @abstractmethod
-    async def get_all(self, user: Username, project_id: int) -> list[Document]:
-        """get all documents available for user in a project with given id"""
-
-    @abstractmethod
-    async def save(self, document: Document) -> Document:
-        """persist a document"""
-
-    @abstractmethod
-    async def delete(self, document: Document):
-        """delete a document"""
-
-
 class ProjectRepository(ABC):
     @abstractmethod
     async def get(self, project_id: int) -> Project:
@@ -29,7 +11,7 @@ class ProjectRepository(ABC):
 
     @abstractmethod
     async def get_all(self, user: Username) -> list[Project]:
-        """get all project available for user"""
+        """get all project where user is a collaborator"""
 
     @abstractmethod
     async def save(self, project: Project) -> Project:
@@ -38,6 +20,14 @@ class ProjectRepository(ABC):
     @abstractmethod
     async def delete(self, project: Project):
         """delete a project"""
+
+    @abstractmethod
+    async def create_document(self, project_id: int, upload_filename) -> Document:
+        """crate a new document in project"""
+
+    @abstractmethod
+    async def get_by_document_id(self, document_id: int) -> Project:
+        """get a project that contains a document with given id"""
 
 
 class UserRepository(ABC):

@@ -9,6 +9,7 @@ passlib
 pydantic
 pydantic-settings
 pytest
+pytest-cov
 pytest-asyncio
 python-multipart
 sqlalchemy[asyncio]

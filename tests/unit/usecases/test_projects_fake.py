@@ -5,12 +5,12 @@ from app.core.errors import ForbiddenError, CollaboratorConflict, ResourceNotFou
 
 
 # Create
-async def test_user_can_create_project(test_user, test_name, test_description, test_id, empty_fake_repo):
-    empty_fake_repo.setup_id(test_id)
+async def test_user_can_create_project(test_user, test_name, test_description, test_project_id, empty_fake_repo):
+    empty_fake_repo.setup_id(test_project_id)
 
     project = await sut.create_project(test_user, test_name, test_description, empty_fake_repo)
 
-    assert project.id == test_id
+    assert project.id == test_project_id
     assert project.name == test_name
     assert project.description == test_description
     assert project.owner == test_user
@@ -56,9 +56,9 @@ async def test_user_cannot_get_project_without_access(unrelated_user, test_proje
         await sut.get_project(unrelated_user, test_project.id, fake_repo)
 
 
-async def test_getting_nonexistent_project_raises(test_user, test_id, empty_fake_repo):
+async def test_getting_nonexistent_project_raises(test_user, test_project_id, empty_fake_repo):
     with pytest.raises(ResourceNotFound):
-        await sut.get_project(test_user, test_id, empty_fake_repo)
+        await sut.get_project(test_user, test_project_id, empty_fake_repo)
 
 
 # Update Project
@@ -97,7 +97,7 @@ async def test_when_project_is_deleted_files_are_deleted(
     await sut.delete_project(test_user, test_project.id, fake_repo, fake_file_repo, fake_tasks)
     await fake_tasks.complete_tasks()
 
-    assert not fake_file_repo.exists(1) and not fake_file_repo.exists(2)
+    assert not fake_file_repo.contains(1) and not fake_file_repo.contains(2)
 
 
 async def test_user_cannot_delete_project_he_collaborates_on(

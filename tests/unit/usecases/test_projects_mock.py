@@ -62,11 +62,11 @@ async def test_user_cannot_get_project_without_access(unrelated_user, test_proje
         await sut.get_project(unrelated_user, test_project.id, mock_repo)
 
 
-async def test_user_cannot_get_nonexistent_project(test_user, test_id, mock_repo):
-    mock_repo.get.side_effect = ResourceNotFound(f"Project <id:{test_id}> does not exist")
+async def test_user_cannot_get_nonexistent_project(test_user, test_project_id, mock_repo):
+    mock_repo.get.side_effect = ResourceNotFound(f"Project <id:{test_project_id}> does not exist")
 
     with pytest.raises(ResourceNotFound):
-        await sut.get_project(test_user, test_id, mock_repo)
+        await sut.get_project(test_user, test_project_id, mock_repo)
 
 
 # Update Project
@@ -232,3 +232,16 @@ async def test_user_cannot_add_a_collaborator_to_project_he_has_no_access_to(
     mock_user_repo.exists.assert_not_called()
     mock_repo.save.assert_not_called()
     assert unrelated_user not in test_project.collaborators
+
+
+async def test_user_cannot_add_a_nonexistent_collaborator_to_a_project(
+    test_user, test_project, mock_repo, mock_user_repo
+):
+    mock_user_repo.exists.return_value = False
+
+    with pytest.raises(ResourceNotFound):
+        await sut.add_user_to_project(test_user, test_project.id, "not_found", mock_repo, mock_user_repo)
+
+    mock_user_repo.exists.assert_awaited_once_with("not_found")
+    mock_repo.save.assert_not_awaited()
+    assert "not_found" not in test_project.collaborators

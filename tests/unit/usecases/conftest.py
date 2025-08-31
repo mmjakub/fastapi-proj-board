@@ -1,4 +1,5 @@
-from unittest.mock import AsyncMock, Mock
+from io import BytesIO
+from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest
 
@@ -9,8 +10,53 @@ from app.core.ports.gateway import TaskQueueGateway
 
 
 @pytest.fixture()
+def test_filename():
+    return "foo.txt"
+
+
+@pytest.fixture()
+def new_filename():
+    return "new.txt"
+
+
+@pytest.fixture()
+def test_file():
+    return BytesIO(b"foo")
+
+
+@pytest.fixture()
+def new_file():
+    return BytesIO(b"new")
+
+
+@pytest.fixture()
+def existing_document_id():
+    return 1
+
+
+@pytest.fixture()
+def test_document_id():
+    return 1
+
+
+@pytest.fixture()
+def created_document(test_filename, test_project_id, nonexistent_document_id):
+    return Document(nonexistent_document_id, test_project_id, test_filename)
+
+
+@pytest.fixture()
+def test_document(test_filename, test_project_id, test_document_id):
+    return Document(test_document_id, test_project_id, test_filename)
+
+
+@pytest.fixture()
+def nonexistent_document_id():
+    return 42
+
+
+@pytest.fixture()
 def test_user() -> Username:
-    return "test_user_1"
+    return "test_user"
 
 
 @pytest.fixture()
@@ -24,7 +70,7 @@ def unrelated_user() -> Username:
 
 
 @pytest.fixture()
-def test_id() -> int:
+def test_project_id() -> int:
     return 1
 
 
@@ -39,14 +85,14 @@ def test_description() -> str:
 
 
 @pytest.fixture()
-def test_documents() -> tuple[Document, ...]:
-    return Document(1, 1, "foo.txt"), Document(2, 1, "bar.txt")
+def test_documents() -> list[Document]:
+    return [Document(1, 1, "foo.txt"), Document(2, 1, "bar.txt")]
 
 
 @pytest.fixture()
-def test_project(test_id, test_user, collaborator, test_name, test_description, test_documents):
+def test_project(test_project_id, test_user, collaborator, test_name, test_description, test_documents):
     return Project(
-        id=test_id,
+        id=test_project_id,
         name=test_name,
         description=test_description,
         owner=test_user,
@@ -56,7 +102,7 @@ def test_project(test_id, test_user, collaborator, test_name, test_description, 
 
 
 @pytest.fixture()
-def test_project2(test_id, test_user, collaborator, test_name, test_description):
+def test_project2(test_project_id, test_user, collaborator, test_name, test_description):
     return Project(
         id=2,
         name=test_name + "2",
@@ -101,7 +147,7 @@ def fake_user_repo(unrelated_user, collaborator) -> UserRepository:
 
 @pytest.fixture()
 def fake_file_repo() -> FileRepository:
-    return FakeFileRepository([(1, "foo\n"), (2, "bar\n")])
+    return FakeFileRepository([(1, "foo"), (2, "bar")])
 
 
 @pytest.fixture()
@@ -110,20 +156,32 @@ def fake_tasks() -> TaskQueueGateway:
 
 
 @pytest.fixture()
-def mock_repo() -> ProjectRepository:
-    return AsyncMock(ProjectRepository)
+def mock_repo(test_project, created_document) -> ProjectRepository:
+    mock = AsyncMock(ProjectRepository)
+    mock.get.return_value = test_project
+    mock.get_by_document_id.return_value = test_project
+    mock.create_document.return_value = created_document
+    return mock
 
 
 @pytest.fixture()
 def mock_user_repo() -> UserRepository:
-    return AsyncMock(UserRepository)
+    mock = AsyncMock(UserRepository)
+    return mock
 
 
 @pytest.fixture()
-def mock_file_repo() -> FileRepository:
-    return AsyncMock(FileRepository)
+def mock_file_repo(test_project, test_file) -> FileRepository:
+    mock = AsyncMock(FileRepository)
+    mock.get.return_value = test_file
+    return mock
 
 
 @pytest.fixture()
 def mock_tasks() -> TaskQueueGateway:
     return Mock(TaskQueueGateway)
+
+
+@pytest.fixture()
+def mock() -> MagicMock:
+    return MagicMock()
