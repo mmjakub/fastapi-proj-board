@@ -254,3 +254,21 @@ async def test_can_explicitly_create_new_document(project_repo, session):
     )
     assert existing_row == (1, 1, "foo")
     assert new_row == (2, 1, "bar")
+
+
+@pytest.mark.usefixtures(
+    "user_alice_exists", "alice_owns_a_project", "there_is_a_document_in_alices_project"
+)
+async def test_can_delete_a_project(project_repo, session):
+    project = Project(
+        id=1,
+        name="test",
+        description="testing",
+        owner="alice",
+        collaborators={"alice"},
+        documents=[Document(id=1, project_id=1, upload_filename="foo")],
+    )
+    await project_repo.delete(project)
+
+    assert list(await session.execute(text("SELECT * FROM project"))) == []
+    assert list(await session.execute(text("SELECT * FROM document"))) == []

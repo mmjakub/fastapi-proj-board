@@ -85,7 +85,11 @@ class SAProjectRepository(ProjectRepository):
         return self._project_orm_to_domain(orm_project)
 
     async def delete(self, project: Project):
-        raise NotImplementedError
+        orm_project = await self.session.scalar(
+            select(orm.Project).where(orm.Project.id == project.id)
+        )
+        await self.session.delete(orm_project)
+        await self.session.flush()
 
     async def create_document(self, project_id: int, upload_filename) -> Document:
         orm_document = orm.Document(
