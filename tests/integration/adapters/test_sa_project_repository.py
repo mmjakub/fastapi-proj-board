@@ -16,7 +16,7 @@ async def test_can_load_a_simple_project(project_repo, session):
         documents=[],
     )
 
-    project = await project_repo.get(1)
+    project = await project_repo.get_project_by_id(1)
 
     assert project == expected
 
@@ -24,7 +24,7 @@ async def test_can_load_a_simple_project(project_repo, session):
 async def test_cannot_load_a_project_by_nonexistent_id(project_repo, session):
 
     with pytest.raises(ResourceNotFound):
-        await project_repo.get(1)
+        await project_repo.get_project_by_id(1)
 
 
 @pytest.mark.usefixtures(
@@ -40,7 +40,7 @@ async def test_can_load_a_project_with_collaborators(project_repo, session):
         documents=[],
     )
 
-    project = await project_repo.get(1)
+    project = await project_repo.get_project_by_id(1)
 
     assert project == expected
 
@@ -67,7 +67,7 @@ async def test_can_load_a_project_with_documents(project_repo, session):
         ],
     )
 
-    project = await project_repo.get(1)
+    project = await project_repo.get_project_by_id(1)
 
     assert project == expected
 
@@ -87,7 +87,7 @@ async def test_can_load_a_project_by_document_id(project_repo, session):
         ],
     )
 
-    project = await project_repo.get_by_document_id(1)
+    project = await project_repo.get_project_by_document_id(1)
 
     assert project == expected
 
@@ -97,7 +97,7 @@ async def test_can_load_a_project_by_document_id(project_repo, session):
 )
 async def test_cannot_load_a_project_by_nonexistent_document_id(project_repo, session):
     with pytest.raises(ResourceNotFound):
-        await project_repo.get_by_document_id(42)
+        await project_repo.get_project_by_document_id(42)
 
 
 @pytest.mark.usefixtures("user_alice_exists", "alice_owns_a_project")
@@ -126,7 +126,7 @@ async def test_can_load_all_projects_for_user(project_repo, session):
         ),
     ]
 
-    projects = await project_repo.get_all("alice")
+    projects = await project_repo.get_all_projects_by_username("alice")
 
     assert projects == expected
 
@@ -142,7 +142,7 @@ async def test_can_save_new_project(project_repo, session):
         documents=[],
     )
 
-    actual = await project_repo.save(project)
+    actual = await project_repo.save_project(project)
 
     assert actual is not project
     project.id = 1
@@ -164,7 +164,7 @@ async def test_can_create_new_project(project_repo, session):
         documents=[],
     )
 
-    actual = await project_repo.create("alice", "test", "testing")
+    actual = await project_repo.create_project("alice", "test", "testing")
 
     assert actual == expected
     [row] = await session.execute(
@@ -184,7 +184,7 @@ async def test_can_save_project_with_new_info(project_repo, session):
         documents=[],
     )
 
-    actual = await project_repo.save(project)
+    actual = await project_repo.save_project(project)
 
     assert actual == project
     [row] = await session.execute(
@@ -203,16 +203,16 @@ async def test_can_save_project_with_edited_document(project_repo, session):
         description="new_description",
         owner="alice",
         collaborators={"alice"},
-        documents=[Document(id=1, project_id=1, upload_filename="bar")],
+        documents=[Document(id=1, project_id=1, upload_filename="new_filename")],
     )
 
-    actual = await project_repo.save(project)
+    actual = await project_repo.save_project(project)
 
     assert actual == project
     [row] = await session.execute(
         text("SELECT id, project_id, upload_filename FROM document")
     )
-    assert row == (1, 1, "bar")
+    assert row == (1, 1, "new_filename")
 
 
 @pytest.mark.usefixtures(
@@ -231,7 +231,7 @@ async def test_can_save_project_with_new_document(project_repo, session):
         ],
     )
 
-    actual = await project_repo.save(project)
+    actual = await project_repo.save_project(project)
 
     assert actual.documents[1].id == 2
     [existing_row, new_row] = await session.execute(
@@ -268,7 +268,7 @@ async def test_can_delete_a_project(project_repo, session):
         collaborators={"alice"},
         documents=[Document(id=1, project_id=1, upload_filename="foo")],
     )
-    await project_repo.delete(project)
+    await project_repo.delete_project(project)
 
     assert list(await session.execute(text("SELECT * FROM project"))) == []
     assert list(await session.execute(text("SELECT * FROM document"))) == []

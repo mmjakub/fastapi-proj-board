@@ -1,7 +1,7 @@
 from sqlalchemy import select, text
 from sqlalchemy.orm import selectinload
 
-from app.adapters import orm
+from app.adapters.sql_alchemy import orm
 
 
 async def test_can_load_users(session):

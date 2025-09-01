@@ -34,7 +34,9 @@ def test_jwt_expiration_time_in_minutes_is_60_by_default():
 
 
 def test_jwt_expiration_time_in_minutes_must_be_parsable_as_int():
-    with patch.dict("os.environ", {"JWT_EXPIRES_MINUTES": "not int"}), pytest.raises(ValidationError):
+    with patch.dict("os.environ", {"JWT_EXPIRES_MINUTES": "not int"}), pytest.raises(
+        ValidationError
+    ):
         Settings()
 
 
@@ -44,11 +46,13 @@ def test_jwt_algorithm_can_be_set():
     assert settings.jwt.algorithm == JwtAlg.HS256
 
 
-def test_jwt_algorithm_is_HS256_by_default():
+def test_jwt_algorithm_is_hS256_by_default():
     settings = Settings()
     assert settings.jwt.algorithm == JwtAlg.HS256
 
 
 def test_jwt_algorithm_cannot_be_set_outside_predefined_values(test_value):
-    with patch.dict("os.environ", {"JWT_ALGORITHM": test_value}), pytest.raises(ValidationError):
+    with patch.dict("os.environ", {"JWT_ALGORITHM": test_value}), pytest.raises(
+        ValidationError
+    ):
         Settings()

@@ -3,10 +3,14 @@ from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest
 
-from .fakes import FakeProjectRepository, FakeUserRepository, FakeTaskQueueGateway, FakeFileRepository
 from app.core.models import Document, Project, Username
-from app.core.ports.repository import FileRepository, ProjectRepository, UserRepository
 from app.core.ports.gateway import TaskQueueGateway
+from app.core.ports.repository import FileRepository, DataRepository
+from .fakes import (
+    FakeDataRepository,
+    FakeTaskQueueGateway,
+    FakeFileRepository,
+)
 
 
 @pytest.fixture()
@@ -90,7 +94,14 @@ def test_documents() -> list[Document]:
 
 
 @pytest.fixture()
-def test_project(test_project_id, test_user, collaborator, test_name, test_description, test_documents):
+def test_project(
+    test_project_id,
+    test_user,
+    collaborator,
+    test_name,
+    test_description,
+    test_documents,
+):
     return Project(
         id=test_project_id,
         name=test_name,
@@ -102,7 +113,9 @@ def test_project(test_project_id, test_user, collaborator, test_name, test_descr
 
 
 @pytest.fixture()
-def test_project2(test_project_id, test_user, collaborator, test_name, test_description):
+def test_project2(
+    test_project_id, test_user, collaborator, test_name, test_description
+):
     return Project(
         id=2,
         name=test_name + "2",
@@ -131,18 +144,17 @@ def updated_project(test_user, collaborator, new_project_info, test_documents):
 
 
 @pytest.fixture()
-def empty_fake_repo() -> FakeProjectRepository:
-    return FakeProjectRepository()
+def empty_fake_repo() -> FakeDataRepository:
+    return FakeDataRepository()
 
 
 @pytest.fixture()
-def fake_repo(test_project, test_project2) -> FakeProjectRepository:
-    return FakeProjectRepository([test_project, test_project2])
-
-
-@pytest.fixture()
-def fake_user_repo(unrelated_user, collaborator) -> UserRepository:
-    return FakeUserRepository([(unrelated_user, ""), (collaborator, "")])
+def fake_repo(
+    test_project, test_project2, test_user, collaborator, unrelated_user
+) -> FakeDataRepository:
+    return FakeDataRepository(
+        [test_project, test_project2], [test_user, collaborator, unrelated_user]
+    )
 
 
 @pytest.fixture()
@@ -156,29 +168,23 @@ def fake_tasks() -> TaskQueueGateway:
 
 
 @pytest.fixture()
-def mock_repo(test_project, created_document) -> ProjectRepository:
-    mock = AsyncMock(ProjectRepository)
-    mock.get.return_value = test_project
-    mock.get_by_document_id.return_value = test_project
+def mock_repo(test_project, created_document) -> AsyncMock:
+    mock = AsyncMock(DataRepository)
+    mock.get_project_by_id.return_value = test_project
+    mock.get_project_by_document_id.return_value = test_project
     mock.create_document.return_value = created_document
     return mock
 
 
 @pytest.fixture()
-def mock_user_repo() -> UserRepository:
-    mock = AsyncMock(UserRepository)
-    return mock
-
-
-@pytest.fixture()
-def mock_file_repo(test_project, test_file) -> FileRepository:
+def mock_file_repo(test_project, test_file) -> AsyncMock:
     mock = AsyncMock(FileRepository)
     mock.get.return_value = test_file
     return mock
 
 
 @pytest.fixture()
-def mock_tasks() -> TaskQueueGateway:
+def mock_tasks() -> Mock:
     return Mock(TaskQueueGateway)
 
 
