@@ -13,10 +13,18 @@ class SADataRepository(DataRepository):
         self.session = session
 
     async def create_user(self, username: Username, password: str) -> User:
-        raise NotImplementedError
+        orm_user = orm.User(username=username, password=password)
+        self.session.add(orm_user)
+        await self.session.flush()
+        return User(
+            id=orm_user.id, username=orm_user.username, password=orm_user.password
+        )
 
     async def user_exists(self, username: Username) -> bool:
-        raise NotImplementedError
+        orm_user = await self.session.scalar(
+            select(orm.User).where(orm.User.username == username)
+        )
+        return orm_user is not None
 
     def _document_to_orm(self, document: Document) -> orm.Document:
         return orm.Document(

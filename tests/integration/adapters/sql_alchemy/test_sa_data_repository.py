@@ -2,7 +2,7 @@ import pytest
 from sqlalchemy import text
 
 from app.core.errors import ResourceNotFound
-from app.core.models import Project, Document
+from app.core.models import Project, Document, User
 
 
 @pytest.mark.usefixtures("user_alice_exists", "alice_owns_a_project")
@@ -272,3 +272,20 @@ async def test_can_delete_a_project(repository, session):
 
     assert list(await session.execute(text("SELECT * FROM project"))) == []
     assert list(await session.execute(text("SELECT * FROM document"))) == []
+
+
+async def test_can_create_a_new_user(repository, session):
+    user = await repository.create_user("alice", "alice")
+
+    assert user == User(1, "alice", "alice")
+    [row] = await session.execute(text("SELECT id, username, password FROM user"))
+    assert row == (1, "alice", "alice")
+
+
+async def test_user_does_not_exist(repository, session):
+    assert not await repository.user_exists("alice")
+
+
+@pytest.mark.usefixtures("user_alice_exists")
+async def test_user_does_exist(repository, session):
+    assert await repository.user_exists("alice")
