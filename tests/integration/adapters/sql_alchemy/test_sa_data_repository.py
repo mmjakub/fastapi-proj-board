@@ -6,7 +6,7 @@ from app.core.models import Project, Document
 
 
 @pytest.mark.usefixtures("user_alice_exists", "alice_owns_a_project")
-async def test_can_load_a_simple_project(project_repo, session):
+async def test_can_load_a_simple_project(repository, session):
     expected = Project(
         id=1,
         name="test",
@@ -16,21 +16,21 @@ async def test_can_load_a_simple_project(project_repo, session):
         documents=[],
     )
 
-    project = await project_repo.get_project_by_id(1)
+    project = await repository.get_project_by_id(1)
 
     assert project == expected
 
 
-async def test_cannot_load_a_project_by_nonexistent_id(project_repo, session):
+async def test_cannot_load_a_project_by_nonexistent_id(repository, session):
 
     with pytest.raises(ResourceNotFound):
-        await project_repo.get_project_by_id(1)
+        await repository.get_project_by_id(1)
 
 
 @pytest.mark.usefixtures(
     "user_alice_exists", "alice_owns_a_project", "bob_works_on_alices_project"
 )
-async def test_can_load_a_project_with_collaborators(project_repo, session):
+async def test_can_load_a_project_with_collaborators(repository, session):
     expected = Project(
         id=1,
         name="test",
@@ -40,7 +40,7 @@ async def test_can_load_a_project_with_collaborators(project_repo, session):
         documents=[],
     )
 
-    project = await project_repo.get_project_by_id(1)
+    project = await repository.get_project_by_id(1)
 
     assert project == expected
 
@@ -48,7 +48,7 @@ async def test_can_load_a_project_with_collaborators(project_repo, session):
 @pytest.mark.usefixtures(
     "user_alice_exists", "alice_owns_a_project", "there_is_a_document_in_alices_project"
 )
-async def test_can_load_a_project_with_documents(project_repo, session):
+async def test_can_load_a_project_with_documents(repository, session):
     await session.execute(
         text(
             "INSERT INTO document (id, project_id, upload_filename) VALUES "
@@ -67,7 +67,7 @@ async def test_can_load_a_project_with_documents(project_repo, session):
         ],
     )
 
-    project = await project_repo.get_project_by_id(1)
+    project = await repository.get_project_by_id(1)
 
     assert project == expected
 
@@ -75,7 +75,7 @@ async def test_can_load_a_project_with_documents(project_repo, session):
 @pytest.mark.usefixtures(
     "user_alice_exists", "alice_owns_a_project", "there_is_a_document_in_alices_project"
 )
-async def test_can_load_a_project_by_document_id(project_repo, session):
+async def test_can_load_a_project_by_document_id(repository, session):
     expected = Project(
         id=1,
         name="test",
@@ -87,7 +87,7 @@ async def test_can_load_a_project_by_document_id(project_repo, session):
         ],
     )
 
-    project = await project_repo.get_project_by_document_id(1)
+    project = await repository.get_project_by_document_id(1)
 
     assert project == expected
 
@@ -95,13 +95,13 @@ async def test_can_load_a_project_by_document_id(project_repo, session):
 @pytest.mark.usefixtures(
     "user_alice_exists", "alice_owns_a_project", "there_is_a_document_in_alices_project"
 )
-async def test_cannot_load_a_project_by_nonexistent_document_id(project_repo, session):
+async def test_cannot_load_a_project_by_nonexistent_document_id(repository, session):
     with pytest.raises(ResourceNotFound):
-        await project_repo.get_project_by_document_id(42)
+        await repository.get_project_by_document_id(42)
 
 
 @pytest.mark.usefixtures("user_alice_exists", "alice_owns_a_project")
-async def test_can_load_all_projects_for_user(project_repo, session):
+async def test_can_load_all_projects_for_user(repository, session):
     await session.execute(text("INSERT INTO user VALUES " '(2, "bob", "bob")'))
     await session.execute(
         text('INSERT INTO project VALUES (2, 2, "test2", "testing2")')
@@ -126,13 +126,13 @@ async def test_can_load_all_projects_for_user(project_repo, session):
         ),
     ]
 
-    projects = await project_repo.get_all_projects_by_username("alice")
+    projects = await repository.get_all_projects_by_username("alice")
 
     assert projects == expected
 
 
 @pytest.mark.usefixtures("user_alice_exists")
-async def test_can_save_new_project(project_repo, session):
+async def test_can_save_new_project(repository, session):
     project = Project(
         id=None,
         name="test",
@@ -142,7 +142,7 @@ async def test_can_save_new_project(project_repo, session):
         documents=[],
     )
 
-    actual = await project_repo.save_project(project)
+    actual = await repository.save_project(project)
 
     assert actual is not project
     project.id = 1
@@ -154,7 +154,7 @@ async def test_can_save_new_project(project_repo, session):
 
 
 @pytest.mark.usefixtures("user_alice_exists")
-async def test_can_create_new_project(project_repo, session):
+async def test_can_create_new_project(repository, session):
     expected = Project(
         id=1,
         name="test",
@@ -164,7 +164,7 @@ async def test_can_create_new_project(project_repo, session):
         documents=[],
     )
 
-    actual = await project_repo.create_project("alice", "test", "testing")
+    actual = await repository.create_project("alice", "test", "testing")
 
     assert actual == expected
     [row] = await session.execute(
@@ -174,7 +174,7 @@ async def test_can_create_new_project(project_repo, session):
 
 
 @pytest.mark.usefixtures("user_alice_exists", "alice_owns_a_project")
-async def test_can_save_project_with_new_info(project_repo, session):
+async def test_can_save_project_with_new_info(repository, session):
     project = Project(
         id=1,
         name="new_name",
@@ -184,7 +184,7 @@ async def test_can_save_project_with_new_info(project_repo, session):
         documents=[],
     )
 
-    actual = await project_repo.save_project(project)
+    actual = await repository.save_project(project)
 
     assert actual == project
     [row] = await session.execute(
@@ -196,7 +196,7 @@ async def test_can_save_project_with_new_info(project_repo, session):
 @pytest.mark.usefixtures(
     "user_alice_exists", "alice_owns_a_project", "there_is_a_document_in_alices_project"
 )
-async def test_can_save_project_with_edited_document(project_repo, session):
+async def test_can_save_project_with_edited_document(repository, session):
     project = Project(
         id=1,
         name="new_name",
@@ -206,7 +206,7 @@ async def test_can_save_project_with_edited_document(project_repo, session):
         documents=[Document(id=1, project_id=1, upload_filename="new_filename")],
     )
 
-    actual = await project_repo.save_project(project)
+    actual = await repository.save_project(project)
 
     assert actual == project
     [row] = await session.execute(
@@ -218,7 +218,7 @@ async def test_can_save_project_with_edited_document(project_repo, session):
 @pytest.mark.usefixtures(
     "user_alice_exists", "alice_owns_a_project", "there_is_a_document_in_alices_project"
 )
-async def test_can_save_project_with_new_document(project_repo, session):
+async def test_can_save_project_with_new_document(repository, session):
     project = Project(
         id=1,
         name="new_name",
@@ -231,7 +231,7 @@ async def test_can_save_project_with_new_document(project_repo, session):
         ],
     )
 
-    actual = await project_repo.save_project(project)
+    actual = await repository.save_project(project)
 
     assert actual.documents[1].id == 2
     [existing_row, new_row] = await session.execute(
@@ -244,9 +244,9 @@ async def test_can_save_project_with_new_document(project_repo, session):
 @pytest.mark.usefixtures(
     "user_alice_exists", "alice_owns_a_project", "there_is_a_document_in_alices_project"
 )
-async def test_can_explicitly_create_new_document(project_repo, session):
+async def test_can_explicitly_create_new_document(repository, session):
     expected = Document(id=2, project_id=1, upload_filename="bar")
-    actual = await project_repo.create_document(project_id=1, upload_filename="bar")
+    actual = await repository.create_document(project_id=1, upload_filename="bar")
 
     assert actual == expected
     [existing_row, new_row] = await session.execute(
@@ -259,7 +259,7 @@ async def test_can_explicitly_create_new_document(project_repo, session):
 @pytest.mark.usefixtures(
     "user_alice_exists", "alice_owns_a_project", "there_is_a_document_in_alices_project"
 )
-async def test_can_delete_a_project(project_repo, session):
+async def test_can_delete_a_project(repository, session):
     project = Project(
         id=1,
         name="test",
@@ -268,7 +268,7 @@ async def test_can_delete_a_project(project_repo, session):
         collaborators={"alice"},
         documents=[Document(id=1, project_id=1, upload_filename="foo")],
     )
-    await project_repo.delete_project(project)
+    await repository.delete_project(project)
 
     assert list(await session.execute(text("SELECT * FROM project"))) == []
     assert list(await session.execute(text("SELECT * FROM document"))) == []

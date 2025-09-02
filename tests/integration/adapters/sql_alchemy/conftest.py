@@ -30,7 +30,7 @@ async def session(session_factory):
 
 
 @pytest.fixture()
-def project_repo(session):
+def repository(session):
     return SADataRepository(session)
 
 
