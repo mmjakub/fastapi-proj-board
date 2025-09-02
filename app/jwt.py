@@ -4,15 +4,17 @@ from typing import Annotated
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from joserfc import jwt
+from joserfc.errors import JoseError
 from joserfc.jwk import OctKey
 
-from .config import settings
+from .config import get_settings
 from .errors import UnauthorizedError
 from .endpoints.schema import OAuthTokenResponse
 
 
-jwt_settings = settings.jwt
+jwt_settings = get_settings().jwt
 jwt_key = OctKey.import_key(jwt_settings.secret_key)
+jwt_claims_reg = jwt.JWTClaimsRegistry()
 
 
 def create_access_token(username: str) -> OAuthTokenResponse:
@@ -27,17 +29,18 @@ def create_access_token(username: str) -> OAuthTokenResponse:
     return OAuthTokenResponse(access_token=access_token, token_type="Bearer", expires=jwt_settings.expires_minutes * 60)
 
 
-def get_sub_from_jwt(token: str) -> str:
+def _get_sub_from_jwt(token: str) -> str:
     decoded_token = jwt.decode(token, jwt_key, [jwt_settings.algorithm])
+    jwt_claims_reg.validate(decoded_token.claims)
     return decoded_token.claims["sub"]
 
 
-async def get_username_from_jwt(
+def get_username_from_jwt(
     token: Annotated[str, Depends(OAuth2PasswordBearer(tokenUrl="/login"))],
 ) -> str:
     try:
-        username = get_sub_from_jwt(token)
-    except Exception:
+        username = _get_sub_from_jwt(token)
+    except JoseError:
         raise UnauthorizedError()
     return username
 
