@@ -78,7 +78,7 @@ async def alice_owns_a_project(user_alice_exists, session):
 
 
 @pytest.fixture()
-async def there_is_a_document_in_alices_project(session):
+async def there_is_a_document_in_alices_project(alice_owns_a_project, session):
     await session.execute(
         text(
             "INSERT INTO document (id, project_id, upload_filename) VALUES "

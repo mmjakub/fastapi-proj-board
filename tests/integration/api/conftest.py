@@ -31,15 +31,22 @@ async def client(session_factory, file_repository):
 @pytest.fixture()
 async def user_alice_exists(session, client):
     await session.execute(
-        text('INSERT INTO user (id, username, password) VALUES (1, "alice", :pw)').bindparams(
-            pw=get_crypt_context().hash("alice")
-        )
+        text(
+            'INSERT INTO user (id, username, password) VALUES (1, "alice", :pw)'
+        ).bindparams(pw=get_crypt_context().hash("alice"))
     )
 
 
 @pytest.fixture()
-async def there_is_a_document_in_alices_project(session, file_repository):
-    await session.execute(text("INSERT INTO document (id, project_id, upload_filename) VALUES " '(1, 1, "foo")'))
+async def there_is_a_document_in_alices_project(
+    alice_owns_a_project, session, file_repository
+):
+    await session.execute(
+        text(
+            "INSERT INTO document (id, project_id, upload_filename) VALUES "
+            '(1, 1, "foo")'
+        )
+    )
     await file_repository.save(1, BytesIO(b"foobar"))
 
 

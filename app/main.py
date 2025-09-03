@@ -6,7 +6,6 @@ from .errors import OAuthException, UnauthorizedError
 from .endpoints.auth import router as auth_router
 from .endpoints.project import router as project_router
 from .endpoints.document import router as document_router
-from .endpoints.schema import OAuthErrorResponse
 
 
 app = FastAPI()
