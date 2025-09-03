@@ -1,15 +1,14 @@
 import pytest
-from sqlalchemy import select, text
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
     AsyncEngine,
     AsyncSession,
 )
-from sqlalchemy.orm import selectinload
 
-from app.adapters import orm
-from app.adapters.sa_repository import SAProjectRepository
+from app.adapters.sql_alchemy import orm
+from app.adapters.sql_alchemy.repository import SADataRepository
 
 
 @pytest.fixture()
@@ -21,8 +20,7 @@ def engine() -> AsyncEngine:
 async def session_factory(engine) -> async_sessionmaker[AsyncSession]:
     async with engine.begin() as conn:
         await conn.run_sync(orm.Base.metadata.create_all)
-    Session = async_sessionmaker(engine)
-    return Session
+    return async_sessionmaker(engine)
 
 
 @pytest.fixture()
@@ -32,8 +30,8 @@ async def session(session_factory):
 
 
 @pytest.fixture()
-def project_repo(session):
-    return SAProjectRepository(session)
+def repository(session):
+    return SADataRepository(session)
 
 
 @pytest.fixture()

@@ -2,35 +2,56 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from . import orm
-from ..core.errors import ResourceNotFound
-from ..core.ports.repository import ProjectRepository
-from ..core.models import Project, Document, Username
+from app.adapters.sql_alchemy import orm
+from app.core.errors import ResourceNotFound
+from app.core.ports.repository import DataRepository
+from app.core.models import Project, Document, Username, User
 
 
-class SAProjectRepository(ProjectRepository):
+class SADataRepository(DataRepository):
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    def _document_orm_to_domain(self, orm_document: orm.Document) -> Document:
+    async def create_user(self, username: Username, password: str) -> User:
+        orm_user = orm.User(username=username, password=password)
+        self.session.add(orm_user)
+        await self.session.flush()
+        return User(
+            id=orm_user.id, username=orm_user.username, password=orm_user.password
+        )
+
+    async def user_exists(self, username: Username) -> bool:
+        orm_user = await self.session.scalar(
+            select(orm.User).where(orm.User.username == username)
+        )
+        return orm_user is not None
+
+    def _document_to_orm(self, document: Document) -> orm.Document:
+        return orm.Document(
+            id=document.id,
+            project_id=document.project_id,
+            upload_filename=document.upload_filename,
+        )
+
+    def _document_from_orm(self, orm_document: orm.Document) -> Document:
         return Document(
             id=orm_document.id,
             project_id=orm_document.project.id,
             upload_filename=orm_document.upload_filename,
         )
 
-    def _project_orm_to_domain(self, orm_project: orm.Project) -> Project:
+    def _project_from_orm(self, orm_project: orm.Project) -> Project:
         project = Project(
             id=orm_project.id,
             name=orm_project.name,
             description=orm_project.description,
             owner=orm_project.owner.username,
             collaborators={u.username for u in orm_project.collaborators},
-            documents=list(map(self._document_orm_to_domain, orm_project.documents)),
+            documents=list(map(self._document_from_orm, orm_project.documents)),
         )
         return project
 
-    async def get(self, project_id: int) -> Project:
+    async def get_project_by_id(self, project_id: int) -> Project:
         orm_project = await self.session.scalar(
             select(orm.Project)
             .where(orm.Project.id == project_id)
@@ -42,9 +63,9 @@ class SAProjectRepository(ProjectRepository):
         )
         if orm_project is None:
             raise ResourceNotFound(f"Project with id={project_id} not found")
-        return self._project_orm_to_domain(orm_project)
+        return self._project_from_orm(orm_project)
 
-    async def get_all(self, user: Username) -> list[Project]:
+    async def get_all_projects_by_username(self, user: Username) -> list[Project]:
         orm_projects = (
             await self.session.scalars(
                 select(orm.Project)
@@ -57,34 +78,34 @@ class SAProjectRepository(ProjectRepository):
                 )
             )
         ).all()
-        return list(map(self._project_orm_to_domain, orm_projects))
+        return list(map(self._project_from_orm, orm_projects))
 
-    async def create(
+    async def create_project(
         self, owner: Username, project_name: str, project_description: str
     ) -> Project:
-        orm_owner = await self._get_user_by_username(owner)
+        orm_owner = await self._get_orm_user(owner)
         orm_project = orm.Project(name=project_name, description=project_description)
         orm_project.owner = orm_owner
         orm_project.collaborators = [orm_owner]
         orm_project.documents = []
         self.session.add(orm_project)
         await self.session.flush()
-        return self._project_orm_to_domain(orm_project)
+        return self._project_from_orm(orm_project)
 
-    async def save(self, project: Project) -> Project:
+    async def save_project(self, project: Project) -> Project:
         orm_project = orm.Project(
             id=project.id, name=project.name, description=project.description
         )
-        orm_project.owner = await self._get_user_by_username(project.owner)
+        orm_project.owner = await self._get_orm_user(project.owner)
         orm_project.collaborators = [
-            await self._get_user_by_username(un) for un in project.collaborators
+            await self._get_orm_user(un) for un in project.collaborators
         ]
         orm_project.documents = [self._document_to_orm(d) for d in project.documents]
         orm_project = await self.session.merge(orm_project)
         await self.session.flush()
-        return self._project_orm_to_domain(orm_project)
+        return self._project_from_orm(orm_project)
 
-    async def delete(self, project: Project):
+    async def delete_project(self, project: Project):
         orm_project = await self.session.scalar(
             select(orm.Project).where(orm.Project.id == project.id)
         )
@@ -98,9 +119,9 @@ class SAProjectRepository(ProjectRepository):
         self.session.add(orm_document)
         await self.session.flush()
         await orm_document.awaitable_attrs.project
-        return self._document_orm_to_domain(orm_document)
+        return self._document_from_orm(orm_document)
 
-    async def get_by_document_id(self, document_id: int) -> Project:
+    async def get_project_by_document_id(self, document_id: int) -> Project:
         orm_project = await self.session.scalar(
             select(orm.Project)
             .join(orm.Project.documents)
@@ -113,19 +134,18 @@ class SAProjectRepository(ProjectRepository):
         )
         if orm_project is None:
             raise ResourceNotFound(f"Document with id={document_id} not found.")
-        return self._project_orm_to_domain(orm_project)
+        return self._project_from_orm(orm_project)
 
-    def _document_to_orm(self, document: Document) -> orm.Document:
-        return orm.Document(
-            id=document.id,
-            project_id=document.project_id,
-            upload_filename=document.upload_filename,
-        )
-
-    async def _get_user_by_username(self, username: Username) -> orm.User:
-        user = await self.session.scalar(
+    async def _get_orm_user(self, username: Username) -> orm.User:
+        orm_user = await self.session.scalar(
             select(orm.User).where(orm.User.username == username)
         )
-        if user is None:
+        if orm_user is None:
             raise ResourceNotFound(f"User with username={username} not found")
-        return user
+        return orm_user
+
+    async def get_user(self, username: Username) -> User:
+        orm_user = await self._get_orm_user(username)
+        return User(
+            id=orm_user.id, username=orm_user.username, password=orm_user.password
+        )
