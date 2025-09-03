@@ -39,9 +39,7 @@ async def _get_project_if_user_is_owner(
 async def create_project(
     user: Username, name: str, description: str, repository: DataRepository
 ) -> Project:
-    project = await repository.create_project(
-        owner=user, name=name, description=description
-    )
+    project = await repository.create_project(user, name, description)
     return project
 
 

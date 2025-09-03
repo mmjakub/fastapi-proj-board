@@ -1,6 +1,7 @@
 from fastapi import APIRouter, UploadFile
 from fastapi.responses import StreamingResponse
 
+from ..core.models import Document
 from ..jwt import JwtUsernameDep
 from .dependencies import PagingDep
 from .schema import DocumentResponse, error_responses, PagedList
@@ -8,8 +9,14 @@ from .schema import DocumentResponse, error_responses, PagedList
 router = APIRouter(tags=["document"], responses=error_responses)
 
 
+def make_document_response(document: Document) -> DocumentResponse:
+    return DocumentResponse(id=document.id, filename=document.upload_filename)
+
+
 @router.get("/projects/{project_id}/documents", summary="List project documents")
-async def list_all(project_id: int, paging: PagingDep, username: JwtUsernameDep) -> PagedList[DocumentResponse]:
+async def list_all(
+    project_id: int, paging: PagingDep, username: JwtUsernameDep
+) -> PagedList[DocumentResponse]:
     """
     List documents in a project
       - **project_id**: id of the project, in which to create the document
@@ -27,8 +34,12 @@ async def list_all(project_id: int, paging: PagingDep, username: JwtUsernameDep)
     raise NotImplementedError
 
 
-@router.post("/projects/{project_id}/documents", status_code=201, summary="Create a document")
-async def create(project_id: int, file: UploadFile, username: JwtUsernameDep) -> DocumentResponse:
+@router.post(
+    "/projects/{project_id}/documents", status_code=201, summary="Create a document"
+)
+async def create(
+    project_id: int, file: UploadFile, username: JwtUsernameDep
+) -> DocumentResponse:
     """
     Upload a file to create a new document in a project. Returns created document.
       - **project_id**: id of the project, in which to create the document
@@ -59,7 +70,9 @@ async def get(document_id: int, username: JwtUsernameDep) -> StreamingResponse:
 
 
 @router.put("/documents/{document_id}", summary="Update a document")
-async def update(document_id: int, file: UploadFile, username: JwtUsernameDep) -> DocumentResponse:
+async def update(
+    document_id: int, file: UploadFile, username: JwtUsernameDep
+) -> DocumentResponse:
     """
     Upload a new file that will replace contents of a document
     - **document_id**:  required

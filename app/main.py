@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from .core.errors import ConflictError
+from .core.errors import ConflictError, ForbiddenError, ResourceNotFound
 from .errors import OAuthException, UnauthorizedError
 from .endpoints.auth import router as auth_router
 from .endpoints.project import router as project_router
@@ -33,6 +33,22 @@ async def unauthorized_handler(request: Request, exc: UnauthorizedError):
 async def conflict_handler(request: Request, exc: ConflictError):
     return JSONResponse(
         status_code=409,
+        content={"error": exc.args[0]},
+    )
+
+
+@app.exception_handler(ForbiddenError)
+async def forbidden_handler(request: Request, exc: ForbiddenError):
+    return JSONResponse(
+        status_code=403,
+        content={"error": exc.args[0]},
+    )
+
+
+@app.exception_handler(ResourceNotFound)
+async def forbidden_handler(request: Request, exc: ResourceNotFound):
+    return JSONResponse(
+        status_code=404,
         content={"error": exc.args[0]},
     )
 

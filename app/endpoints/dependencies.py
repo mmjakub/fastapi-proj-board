@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.adapters.sql_alchemy.repository import SADataRepository
 from app.core.ports.gateway import PasswordHashGateway
-from app.core.ports.repository import DataRepository
+from app.core.ports.repository import DataRepository, FileRepository
 
 
 class Paging(TypedDict):
@@ -28,7 +28,7 @@ def get_session_factory(request: Request):
 async def get_data_repository(
     session_factory: async_sessionmaker[AsyncSession] = Depends(get_session_factory),
 ):
-    async with session_factory() as session:
+    async with session_factory() as session, session.begin():
         yield SADataRepository(session)
 
 
@@ -40,3 +40,10 @@ def get_crypt_context():
 
 
 PasswordHashGatewayDep = Annotated[PasswordHashGateway, Depends(get_crypt_context)]
+
+
+def get_file_repository(request: Request):
+    return request.state.file_repository
+
+
+FileRepositoryDep = Annotated[FileRepository, Depends(get_file_repository)]
