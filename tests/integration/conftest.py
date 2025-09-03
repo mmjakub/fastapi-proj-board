@@ -42,17 +42,30 @@ async def user_alice_exists(session):
 
 
 @pytest.fixture()
-async def bob_works_on_alices_project(session):
+async def user_bob_exists(session):
     await session.execute(
         text('INSERT INTO user (id, username, password) VALUES (2, "bob", "bob")')
     )
+
+
+@pytest.fixture()
+async def user_charlie_exists(session):
+    await session.execute(
+        text(
+            'INSERT INTO user (id, username, password) VALUES (3, "charlie", "charlie")'
+        )
+    )
+
+
+@pytest.fixture()
+async def bob_works_on_alices_project(session, user_bob_exists):
     await session.execute(
         text("INSERT INTO collaborator (user_id, project_id) VALUES (2, 1);")
     )
 
 
 @pytest.fixture()
-async def alice_owns_a_project(session):
+async def alice_owns_a_project(user_alice_exists, session):
     await session.execute(
         text(
             "INSERT INTO project (id, owner_id, name, description) VALUES "
@@ -65,7 +78,7 @@ async def alice_owns_a_project(session):
 
 
 @pytest.fixture()
-async def there_is_a_document_in_alices_project(session):
+async def there_is_a_document_in_alices_project(alice_owns_a_project, session):
     await session.execute(
         text(
             "INSERT INTO document (id, project_id, upload_filename) VALUES "

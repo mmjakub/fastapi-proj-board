@@ -1,11 +1,11 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
+from .core.errors import ConflictError, ForbiddenError, ResourceNotFound
 from .errors import OAuthException, UnauthorizedError
 from .endpoints.auth import router as auth_router
 from .endpoints.project import router as project_router
 from .endpoints.document import router as document_router
-from .endpoints.schema import OAuthErrorResponse
 
 
 app = FastAPI()
@@ -15,7 +15,7 @@ app = FastAPI()
 async def oauth_exception_handler(request: Request, exc: OAuthException):
     return JSONResponse(
         status_code=exc.status_code,
-        content=OAuthErrorResponse(error=exc.error, error_description=exc.error_description),
+        content=dict(error=exc.error, error_description=exc.error_description),
     )
 
 
@@ -25,6 +25,30 @@ async def unauthorized_handler(request: Request, exc: UnauthorizedError):
         status_code=401,
         content={"message": "Invalid JWT"},
         headers={"WWW-Authenticate": "Bearer"},
+    )
+
+
+@app.exception_handler(ConflictError)
+async def conflict_handler(request: Request, exc: ConflictError):
+    return JSONResponse(
+        status_code=409,
+        content={"error": exc.args[0]},
+    )
+
+
+@app.exception_handler(ForbiddenError)
+async def forbidden_handler(request: Request, exc: ForbiddenError):
+    return JSONResponse(
+        status_code=403,
+        content={"error": exc.args[0]},
+    )
+
+
+@app.exception_handler(ResourceNotFound)
+async def forbidden_handler(request: Request, exc: ResourceNotFound):
+    return JSONResponse(
+        status_code=404,
+        content={"error": exc.args[0]},
     )
 
 

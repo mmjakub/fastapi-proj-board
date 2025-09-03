@@ -93,15 +93,44 @@ class SADataRepository(DataRepository):
         return self._project_from_orm(orm_project)
 
     async def save_project(self, project: Project) -> Project:
-        orm_project = orm.Project(
-            id=project.id, name=project.name, description=project.description
+        orm_collaborators = {
+            u.username: u
+            for u in await self.session.scalars(
+                select(orm.User).where(orm.User.username.in_(project.collaborators))
+            )
+        }
+
+        orm_owner = orm_collaborators.get(project.owner) or (
+            await self.session.scalars(
+                select(orm.User).where(orm.User.username == project.owner)
+            ).one()
         )
-        orm_project.owner = await self._get_orm_user(project.owner)
-        orm_project.collaborators = [
-            await self._get_orm_user(un) for un in project.collaborators
-        ]
+
+        if project.id:
+            orm_project = (
+                await self.session.scalars(
+                    select(orm.Project)
+                    .where(orm.Project.id == project.id)
+                    .options(
+                        selectinload(orm.Project.collaborators),
+                        selectinload(orm.Project.documents),
+                    )
+                )
+            ).one()
+            orm_project.name = project.name
+            orm_project.description = project.description
+            orm_project.owner = orm_owner
+        else:
+            orm_project = orm.Project(
+                owner_id=orm_owner.id,
+                name=project.name,
+                description=project.description,
+            )
+            self.session.add(orm_project)
+
+        orm_project.collaborators = list(orm_collaborators.values())
         orm_project.documents = [self._document_to_orm(d) for d in project.documents]
-        orm_project = await self.session.merge(orm_project)
+
         await self.session.flush()
         return self._project_from_orm(orm_project)
 

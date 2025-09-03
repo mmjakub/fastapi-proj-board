@@ -18,7 +18,7 @@ async def test_user_can_create_project(
     )
 
     mock_repo.create_project.assert_called_once_with(
-        owner=test_user, name=test_name, description=test_description
+        test_user, test_name, test_description
     )
     assert project == test_project
 

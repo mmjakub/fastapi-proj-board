@@ -4,7 +4,10 @@ from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 
 from .schema import OAuthErrorResponse, RegisterUserRequest, UserResponse, ErrorResponse
-from ..jwt import OAuthTokenResponse
+from .dependencies import DataRepositoryDep, PasswordHashGatewayDep
+from ..core.services import create_user, verify_user_credentials
+from ..errors import InvalidGrantException
+from ..jwt import OAuthTokenResponse, create_access_token
 
 router = APIRouter(tags=["auth"])
 
@@ -14,7 +17,11 @@ router = APIRouter(tags=["auth"])
     summary="Sign In",
     responses={400: {"model": OAuthErrorResponse}},
 )
-async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> OAuthTokenResponse:
+async def login(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    repository: DataRepositoryDep,
+    pw_hasher: PasswordHashGatewayDep,
+) -> OAuthTokenResponse:
     """
     Exchange **username** and **password** for an access token using OAuth2 password grant.
 
@@ -26,7 +33,11 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> O
     - 200: Success
     - 400: Invalid request or credentials
     """
-    raise NotImplementedError
+    if not await verify_user_credentials(
+        form_data.username, form_data.password, repository, pw_hasher
+    ):
+        raise InvalidGrantException
+    return create_access_token(form_data.username)
 
 
 @router.post(
@@ -35,7 +46,11 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> O
     responses={409: {"model": ErrorResponse}},
     status_code=201,
 )
-async def register(payload: RegisterUserRequest) -> UserResponse:
+async def register(
+    payload: RegisterUserRequest,
+    repository: DataRepositoryDep,
+    pw_hasher: PasswordHashGatewayDep,
+) -> UserResponse:
     """
     Register a new user by providing credentials:
 
@@ -48,4 +63,5 @@ async def register(payload: RegisterUserRequest) -> UserResponse:
     - 409: Conflict (username already exists)
     - 422: Validation error
     """
-    raise NotImplementedError
+    user = await create_user(payload.username, payload.password, repository, pw_hasher)
+    return UserResponse(username=user.username, owned_projects=[], projects=[])
