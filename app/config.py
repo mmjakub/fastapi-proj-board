@@ -25,6 +25,7 @@ class JwtSettings(BaseModel):
 
 class S3Settings(BaseModel):
     bucket: str | None = None
+    endpoint_url: str | None = None
 
 
 class Settings(BaseSettings):

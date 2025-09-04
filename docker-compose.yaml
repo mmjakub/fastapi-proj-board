@@ -1,0 +1,42 @@
+services:
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: projects_app_dev
+    healthcheck:
+      test: pg_isready -U postgres -d projects_app_dev
+      start_period: 30s
+      start_interval: 1s
+
+  localstack:
+    image: localstack/localstack
+    container_name: localstack-container
+    environment:
+      SERVICES: s3
+    volumes:
+      - ./init-s3.sh:/etc/localstack/init/ready.d/init-s3.sh
+    healthcheck:
+      test: awslocal s3api head-bucket --bucket testbucket
+      start_period: 30s
+      start_interval: 1s
+
+
+  fastapi-app:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+    restart: always
+    ports:
+      - "80:80"
+    environment:
+      JWT_SECRET_KEY: foobar
+      S3_BUCKET: testbucket
+      S3_ENDPOINT_URL: http://localstack:4566
+      PG_HOST: postgres
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_DEFAULT_REGION: us-east-1
